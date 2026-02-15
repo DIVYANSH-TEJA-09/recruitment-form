@@ -8,13 +8,24 @@ export default function Dashboard() {
     const [submissions, setSubmissions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Load data from LocalStorage
+    // Load data from Google Sheets API
     useEffect(() => {
-        const data = localStorage.getItem('recruitment_submissions');
-        if (data) {
-            setSubmissions(JSON.parse(data).reverse()); // Newest first
-        }
-        setLoading(false);
+        const fetchData = async () => {
+            try {
+                const response = await fetch('/api/responses');
+                const result = await response.json();
+                if (result.success) {
+                    setSubmissions(result.data.reverse()); // Newest first
+                } else {
+                    console.error("Failed to fetch dashboard data");
+                }
+            } catch (error) {
+                console.error("Error loading dashboard:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
     // Calculate Metrics
