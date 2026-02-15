@@ -1,8 +1,7 @@
-
-"use client";
-
 import { useEffect, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+    Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis
+} from 'recharts';
 
 export default function Dashboard() {
     const [submissions, setSubmissions] = useState<any[]>([]);
@@ -32,28 +31,63 @@ export default function Dashboard() {
     // Tabs Configuration
     const TABS = ["Overview", "All Responses", "Technical Team", "Social Media Team", "Content Creation Team", "Outreach Team"];
 
-    // Metrics
-    const totalResponses = submissions.length;
-    const branchCounts: Record<string, number> = {};
-    submissions.forEach(sub => {
-        const branch = sub.branch || 'Unknown';
-        branchCounts[branch] = (branchCounts[branch] || 0) + 1;
-    });
+    const COLORS = ['#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ff9800', '#ff5722'];
 
-    const branchData = Object.keys(branchCounts).map(key => ({
-        name: key,
-        value: branchCounts[key]
-    }));
+    // --- Helper Functions for Data Processing ---
 
-    const COLORS = ['#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39'];
+    const getFrequencyData = (data: any[], key: string, splitByComma = false) => {
+        const counts: Record<string, number> = {};
+        data.forEach(item => {
+            let value = item[key];
+            if (!value) return;
 
-    // Filter Logic
+            if (splitByComma && typeof value === 'string') {
+                // Split "React, Node.js" -> ["React", "Node.js"]
+                const parts = value.split(',').map((v: string) => v.trim());
+                parts.forEach((part: string) => {
+                    if (part) counts[part] = (counts[part] || 0) + 1;
+                });
+            } else {
+                counts[value] = (counts[value] || 0) + 1;
+            }
+        });
+
+        return Object.keys(counts)
+            .map(name => ({ name, value: counts[name] }))
+            .sort((a, b) => b.value - a.value); // Sort by scales
+    };
+
+    // --- Charts Data Preparation ---
+
+    // 1. Overview: Branch Distribution (Pie) & Track Distribution (Pie)
+    const branchData = getFrequencyData(submissions, 'branch');
+    const trackData = getFrequencyData(submissions, 'selected_track');
+
+    // 2. Tech: Top Skills (Bar)
+    const techSubmissions = submissions.filter(s => s.selected_track === 'Technical Team');
+    const techSkillsData = getFrequencyData(techSubmissions, 'tech_skills', true).slice(0, 8); // Top 8 skills
+
+    // 3. Social: Platform Expertise (Pie)
+    const socialSubmissions = submissions.filter(s => s.selected_track === 'Social Media Team');
+    const socialPlatformData = getFrequencyData(socialSubmissions, 'social_platforms', true);
+
+    // 4. Content: Content Types (Pie)
+    const contentSubmissions = submissions.filter(s => s.selected_track === 'Content Creation Team');
+    const contentTypeData = getFrequencyData(contentSubmissions, 'content_type', true);
+
+    // 5. Outreach: Comfort Level (Bar)
+    const outreachSubmissions = submissions.filter(s => s.selected_track === 'Outreach Team');
+    const comfortData = getFrequencyData(outreachSubmissions, 'outreach_comfort').sort((a, b) => parseInt(a.name) - parseInt(b.name));
+
+
+    // Filter Logic for Table
     const getFilteredSubmissions = () => {
         if (activeTab === "Overview" || activeTab === "All Responses") return submissions;
         return submissions.filter(sub => sub.selected_track === activeTab);
     };
 
     const filteredData = getFilteredSubmissions();
+    const totalResponses = submissions.length;
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-[#f0ebf8]">Loading...</div>;
@@ -96,6 +130,7 @@ export default function Dashboard() {
             {/* Content: Overview */}
             {activeTab === "Overview" && (
                 <div className="max-w-6xl mx-auto mb-8">
+                    {/* Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div className="bg-white p-6 rounded-lg shadow-sm border-t-4 border-t-[#673ab7]">
                             <h3 className="text-gray-500 text-sm font-medium uppercase">Total Responses</h3>
@@ -112,26 +147,163 @@ export default function Dashboard() {
                             <p className="text-lg mt-2 text-green-600">Active • Accepting</p>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm">
-                        <h3 className="text-lg font-normal mb-6">Branch Distribution</h3>
-                        <div className="h-[300px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={branchData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                    <YAxis axisLine={false} tickLine={false} />
-                                    <Tooltip cursor={{ fill: 'transparent' }} />
-                                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                                        {branchData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+
+                    {/* Charts Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Branch Distribution (Pie) */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 className="text-lg font-normal mb-6">Branch Distribution</h3>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={branchData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            outerRadius={100}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                        >
+                                            {branchData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* Track Distribution (Pie) */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 className="text-lg font-normal mb-6">Track Preferences</h3>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={trackData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={100}
+                                            fill="#8884d8"
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                        >
+                                            {trackData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* Team Specific Charts */}
+            {activeTab === "Technical Team" && techSkillsData.length > 0 && (
+                <div className="max-w-6xl mx-auto mb-8 bg-white p-6 rounded-lg shadow-sm">
+                    <h3 className="text-lg font-normal mb-6">Top 8 Technical Skills</h3>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={techSkillsData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                <XAxis type="number" />
+                                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
+                                <Tooltip cursor={{ fill: 'transparent' }} />
+                                <Bar dataKey="value" fill="#673ab7" radius={[0, 4, 4, 0]}>
+                                    {techSkillsData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "Social Media Team" && socialPlatformData.length > 0 && (
+                <div className="max-w-6xl mx-auto mb-8 bg-white p-6 rounded-lg shadow-sm">
+                    <h3 className="text-lg font-normal mb-6">Platform Expertise</h3>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={socialPlatformData}
+                                    cx="50%"
+                                    cy="50%"
+                                    label={({ name, value }) => `${name}: ${value}`}
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {socialPlatformData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "Content Creation Team" && contentTypeData.length > 0 && (
+                <div className="max-w-6xl mx-auto mb-8 bg-white p-6 rounded-lg shadow-sm">
+                    <h3 className="text-lg font-normal mb-6">Preferred Content Types</h3>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={contentTypeData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={100}
+                                    label={({ name }) => name}
+                                    fill="#8884d8"
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {contentTypeData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "Outreach Team" && comfortData.length > 0 && (
+                <div className="max-w-6xl mx-auto mb-8 bg-white p-6 rounded-lg shadow-sm">
+                    <h3 className="text-lg font-normal mb-6">Cold Outreach Comfort Level (1-5)</h3>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={comfortData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" />
+                                <YAxis allowDecimals={false} />
+                                <Tooltip cursor={{ fill: 'transparent' }} />
+                                <Bar dataKey="value" fill="#3f51b5" radius={[4, 4, 0, 0]}>
+                                    {comfortData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
 
             {/* Content: Tables */}
             {(activeTab !== "Overview") && (

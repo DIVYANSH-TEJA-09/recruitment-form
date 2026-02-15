@@ -51,16 +51,19 @@ export async function GET() {
             portfolio_link_tech: row.get('Portfolio'),
 
             // Track B: Social
+            social_platforms: row.get('Social Platforms'),
             instagram_handle: row.get('Insta Handle'),
             twitter_handle: row.get('Twitter Handle'),
             social_analysis: row.get('Social Analysis'),
 
             // Track C: Content
+            content_type: row.get('Content Type'),
             content_portfolio: row.get('Portfolio Link'),
             tools_familiarity: row.get('Tools'),
 
             // Track D: Outreach
             cold_outreach_exp: row.get('Cold Outreach'),
+            outreach_comfort: row.get('Comfort'),
             sponsorship_strategy: row.get('Strategy'),
         }));
 
