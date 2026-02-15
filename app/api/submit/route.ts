@@ -8,13 +8,20 @@ export async function POST(req: Request) {
         const body = await req.json();
 
         // 1. Prepare Authentication
+        console.log("BACKEND: Attempting submission...");
+
         if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
+            console.error("BACKEND: Missing Credentials");
             throw new Error('Missing Google Credentials in Environment Variables');
         }
+
+        console.log("BACKEND: Credentials present. Processing key...");
 
         const privateKey = process.env.GOOGLE_PRIVATE_KEY
             .replace(/\\n/g, '\n') // Replace literal \n with actual newlines
             .replace(/"/g, '');    // Remove any surrounding quotes if they exist
+
+        console.log("BACKEND: Key processed. Length:", privateKey.length);
 
         const serviceAccountAuth = new JWT({
             email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
