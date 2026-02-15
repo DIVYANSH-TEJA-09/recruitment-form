@@ -1,0 +1,10 @@
+
+D:\Startup_Ideas\recruitment-form\app\page.tsx
+   16:59  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   22:44  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   70:13  warning  'firstErrorId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  183:28  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  184:35  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+Ô£û 5 problems (4 errors, 1 warning)
+
