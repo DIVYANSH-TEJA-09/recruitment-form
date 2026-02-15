@@ -11,9 +11,84 @@ import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { formStructure, Question, Section } from '@/data/form-structure';
 import React, { useState } from 'react';
+import { z } from 'zod'; // Import Zod
+
+// ---------------------------------------------------------
+// ZOD SCHEMA DEFINITION
+// ---------------------------------------------------------
+
+const formSchema = z.object({
+  // Basic Info
+  full_name: z.string().min(1, "Full Name is required"),
+  roll_number: z.string().regex(/^1608-\d{2}-\d{3}-\d{3}$/, "Format must be 1608-YY-XXX-XXX (e.g., 1608-25-733-019)"),
+  branch: z.string().min(1, "Branch is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  why_join: z.string().min(50, "Please provide a more detailed answer (min 50 chars)"),
+  goals: z.string().min(1, "Required"),
+
+  // Behavioral
+  prioritization_scenario: z.string().min(1, "Required"),
+  time_commitment: z.string().min(1, "Required"),
+  team_failure_experience: z.string().min(1, "Required"),
+  unlimited_resources: z.string().optional(),
+
+  // Event Planning (Mandatory)
+  event_experience: z.string().min(1, "Required"),
+  event_experience_details: z.string().min(1, "Required"),
+  crisis_management: z.string().min(1, "Required"),
+  event_success_factors: z.string().min(1, "Required"),
+
+  // Track Selection
+  selected_track: z.string().min(1, "Required"),
+
+  // Track A: Technical
+  tech_skills: z.array(z.string()).optional(),
+  github_link: z.string().url("Invalid URL").optional().or(z.literal("")),
+  linkedin_link: z.string().url("Invalid URL").optional().or(z.literal("")),
+  portfolio_link_tech: z.string().url("Invalid URL").optional().or(z.literal("")),
+  learning_approach: z.string().optional(),
+  tech_struggle: z.string().optional(),
+  tech_blocker: z.string().optional(),
+  collaboration_style: z.string().optional(),
+  tech_explain_simple: z.string().optional(),
+
+  // Track B: Social
+  social_platforms: z.array(z.string()).optional(),
+  instagram_handle_social: z.string().optional(),
+  linkedin_handle_social: z.string().optional(), // Text or URL, lenient
+  twitter_handle_social: z.string().optional(),
+  other_socials: z.string().optional(),
+  social_analysis: z.string().optional(),
+  social_writing_task: z.string().optional(),
+  social_influencers: z.string().optional(),
+  social_viral_idea: z.string().optional(),
+  social_trend_critique: z.string().optional(),
+
+  // Track C: Content
+  content_type: z.array(z.string()).optional(),
+  portfolio_link: z.string().optional(),
+  creative_process: z.string().optional(),
+  design_philosophy: z.string().optional(),
+  feedback_handling: z.string().optional(),
+  tools_familiarity: z.array(z.string()).optional(),
+  perfect_content: z.string().optional(),
+
+  // Track D: Outreach
+  cold_outreach_exp: z.string().optional(),
+  email_writing_exercise: z.string().optional(),
+  outreach_comfort: z.number().optional(),
+  sponsorship_strategy: z.string().optional(),
+  persuasion_task: z.string().optional(),
+
+  // Closing
+  culture_fit: z.string().min(1, "Required"),
+  conflict_resolution: z.string().min(1, "Required"),
+  honesty_check: z.number().min(1).max(10),
+  any_questions: z.string().optional(),
+}).passthrough();
 
 export default function Home() {
-  // Define acceptable form values
   type FormValue = string | string[] | number;
 
   const [formData, setFormData] = useState<Record<string, FormValue>>({});
@@ -40,18 +115,24 @@ export default function Home() {
     return formData[section.condition.fieldId] === section.condition.value;
   };
 
-  // Validate Form
+  // Validate Form using Zod + Custom Conditional Logic
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
+    // 1. Zod Basic Validation
+    // We don't rely solely on this because of conditional fields
+    // But we use it for format checks on present data
+
+    // 2. Iterative Validation (Visibility Aware) checking against Zod rules
     formStructure.forEach(section => {
       if (!isSectionVisible(section)) return; // Skip hidden sections
 
       section.questions.forEach(question => {
+        const value = formData[question.id];
+
+        // A. Required Check
         if (question.required) {
-          const value = formData[question.id];
-          // Check for empty string, empty array, undefined, null
           const isEmpty =
             value === undefined ||
             value === null ||
@@ -61,6 +142,20 @@ export default function Home() {
           if (isEmpty) {
             newErrors[question.id] = "This is a required question";
             isValid = false;
+            return; // Skip further format checks if empty
+          }
+        }
+
+        // B. Format Check (using Zod Schema) if value exists
+        if (value && value !== "") {
+          // Extract the specific schema for this field from the Shape
+          const fieldSchema = formSchema.shape[question.id as keyof typeof formSchema.shape];
+          if (fieldSchema) {
+            const fieldResult = fieldSchema.safeParse(value);
+            if (!fieldResult.success) {
+              newErrors[question.id] = fieldResult.error.issues[0].message;
+              isValid = false;
+            }
           }
         }
       });
@@ -80,13 +175,40 @@ export default function Home() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    console.log("Form Submitted:", formData);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Store in localStorage for the dashboard (Redundancy/Admin View)
+    try {
+      const existingSubmissions = JSON.parse(localStorage.getItem('recruitment_submissions') || '[]');
+      const newSubmission = {
+        ...formData,
+        timestamp: new Date().toISOString(),
+        id: Date.now().toString(),
+        status: 'Applied'
+      };
+      localStorage.setItem('recruitment_submissions', JSON.stringify([...existingSubmissions, newSubmission]));
+    } catch (e) {
+      console.error("Local storage error", e);
+    }
 
-    setSubmitted(true);
-    setIsSubmitting(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Send to Google Sheets API
+    try {
+      const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit to server');
+      }
+
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      console.error("Submission Error:", error);
+      alert("There was an error submitting your form. Please try again. (Check console for details)");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -159,7 +281,12 @@ export default function Home() {
           >
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
-          <button type="button" className="text-[#673ab7] text-sm font-medium hover:bg-purple-50 px-3 py-2 rounded">Clear form</button>
+          <button
+            type="button"
+            onClick={() => setFormData({})}
+            className="text-[#673ab7] text-sm font-medium hover:bg-purple-50 px-3 py-2 rounded">
+            Clear form
+          </button>
         </div>
       </form>
       <div className="max-w-[770px] mx-auto mt-4 text-center pb-8">
@@ -188,7 +315,7 @@ function renderInput(
           type="text"
           value={value as string}
           onChange={(e) => handleChange(q.id, e.target.value)}
-          placeholder="Your answer"
+          placeholder={q.placeholder || "Your answer"}
           error={!!errors[q.id]}
         />
       );
@@ -228,6 +355,7 @@ function renderInput(
           options={q.options || []}
           value={value as string}
           onChange={(e) => handleChange(q.id, e.target.value)}
+          placeholder={q.placeholder || "Choose"}
           error={!!errors[q.id]}
         />
       );

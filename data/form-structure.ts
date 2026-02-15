@@ -12,6 +12,7 @@ export interface Question {
   max?: number; // For scale
   minLabel?: string; // For scale
   maxLabel?: string; // For scale
+  placeholder?: string;
 }
 
 export interface Section {
@@ -34,22 +35,37 @@ export const formStructure: Section[] = [
     description: "Tell us a bit about yourself.",
     questions: [
       { id: "full_name", type: "text", text: "Full Name", required: true },
-      { id: "roll_number", type: "text", text: "Roll Number", required: true },
-      { id: "branch", type: "text", text: "Branch", required: true },
+      {
+        id: "roll_number",
+        type: "text",
+        text: "Roll Number",
+        description: "Format: 1608-25-733-019 (College Code - Year - Branch Code - Roll No)",
+        placeholder: "1608-25-733-001",
+        required: true
+      },
+      {
+        id: "branch",
+        type: "select",
+        text: "Branch",
+        options: [
+          "CSE", "IT", "EEE", "ECE", "Civil", "Mechanical", "CSE(AIML)", "CSE(AIDS)", "Data Science"
+        ],
+        required: true
+      },
       { id: "email", type: "text", text: "Email Address", required: true },
       { id: "phone", type: "text", text: "Phone Number", required: true },
-      { 
-        id: "why_join", 
-        type: "textarea", 
-        text: "Why do you want to join Dev Catalyst?", 
-        description: "Open-ended, 150-200 words.", 
-        required: true 
+      {
+        id: "why_join",
+        type: "textarea",
+        text: "Why do you want to join Dev Catalyst?",
+        description: "Open-ended, 150-200 words.",
+        required: true
       },
-      { 
-        id: "goals", 
-        type: "textarea", 
+      {
+        id: "goals",
+        type: "textarea",
         text: "What do you hope to achieve by the end of this academic year through this club?",
-        required: true 
+        required: true
       }
     ]
   },
@@ -120,7 +136,7 @@ export const formStructure: Section[] = [
       }
     ]
   },
-  
+
   // TRACK SELECTION
   {
     id: "track_selection_section",
@@ -148,12 +164,29 @@ export const formStructure: Section[] = [
         text: "What technical skills do you currently have?",
         options: ["Programming languages", "Web development", "App development", "AI/ML", "Data Science", "UI/UX Design", "Other"]
       },
+      // SPLIT LINKS
       {
-        id: "tech_links",
-        type: "textarea",
-        text: "Share links to your work (GitHub, LinkedIn, Portfolio).",
-        required: false
+        id: "github_link",
+        type: "text",
+        text: "GitHub Profile Link",
+        required: false,
+        placeholder: "https://github.com/..."
       },
+      {
+        id: "linkedin_link",
+        type: "text",
+        text: "LinkedIn Profile Link",
+        required: false,
+        placeholder: "https://linkedin.com/in/..."
+      },
+      {
+        id: "portfolio_link_tech",
+        type: "text",
+        text: "Portfolio / Website Link (Optional)",
+        required: false,
+        placeholder: "https://..."
+      },
+      // END SPLIT LINKS
       {
         id: "learning_approach",
         type: "textarea",
@@ -206,12 +239,32 @@ export const formStructure: Section[] = [
         text: "Which social media platforms are you most active on? (Pick top 3)",
         options: ["Instagram", "LinkedIn", "Twitter/X", "YouTube", "Facebook", "Discord", "Reddit", "Other"]
       },
+      // SPLIT HANDLES
       {
-        id: "social_handles",
+        id: "instagram_handle_social",
         type: "text",
-        text: "Share your personal social media handles (optional).",
+        text: "Instagram Handle (Optional)",
         required: false
       },
+      {
+        id: "linkedin_handle_social",
+        type: "text",
+        text: "LinkedIn Profile Link (Optional)",
+        required: false
+      },
+      {
+        id: "twitter_handle_social",
+        type: "text",
+        text: "Twitter/X Handle (Optional)",
+        required: false
+      },
+      {
+        id: "other_socials",
+        type: "text",
+        text: "Any other platforms? (Optional)",
+        required: false
+      },
+      // END SPLIT HANDLES
       {
         id: "social_analysis",
         type: "textarea",
