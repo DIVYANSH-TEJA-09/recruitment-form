@@ -368,10 +368,34 @@ export default function Dashboard() {
                                                     <>
                                                         <td className="px-6 py-4">
                                                             <div className="flex flex-col space-y-1">
-                                                                {sub.instagram_handle && <div className="text-xs text-gray-600">IG: {sub.instagram_handle}</div>}
-                                                                {sub.twitter_handle && <div className="text-xs text-gray-600">X: {sub.twitter_handle}</div>}
-                                                                {sub.linkedin_link && <a href={sub.linkedin_link} target="_blank" className="text-[#673ab7] hover:underline text-xs">LinkedIn</a>}
-                                                                {sub.portfolio_link_tech && <a href={sub.portfolio_link_tech} target="_blank" className="text-[#673ab7] hover:underline text-xs">Portfolio</a>}
+                                                                {sub.instagram_handle && (
+                                                                    <a
+                                                                        href={sub.instagram_handle.startsWith('http') ? sub.instagram_handle : `https://instagram.com/${sub.instagram_handle.replace('@', '')}`}
+                                                                        target="_blank"
+                                                                        className="text-[#673ab7] hover:underline text-xs block"
+                                                                    >
+                                                                        IG: {sub.instagram_handle}
+                                                                    </a>
+                                                                )}
+                                                                {sub.twitter_handle && (
+                                                                    <a
+                                                                        href={sub.twitter_handle.startsWith('http') ? sub.twitter_handle : `https://x.com/${sub.twitter_handle.replace('@', '')}`}
+                                                                        target="_blank"
+                                                                        className="text-[#673ab7] hover:underline text-xs block"
+                                                                    >
+                                                                        X: {sub.twitter_handle}
+                                                                    </a>
+                                                                )}
+                                                                {sub.linkedin_handle_social && (
+                                                                    <a
+                                                                        href={sub.linkedin_handle_social.startsWith('http') ? sub.linkedin_handle_social : `https://${sub.linkedin_handle_social}`}
+                                                                        target="_blank"
+                                                                        className="text-[#673ab7] hover:underline text-xs block"
+                                                                    >
+                                                                        LinkedIn
+                                                                    </a>
+                                                                )}
+                                                                {sub.other_socials && <div className="text-xs text-gray-500 truncate max-w-[150px]" title={sub.other_socials}>{sub.other_socials}</div>}
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 max-w-xs truncate" title={sub.social_analysis}>{sub.social_analysis}</td>

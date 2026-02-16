@@ -54,6 +54,8 @@ export async function GET() {
             social_platforms: row.get('Social Platforms'),
             instagram_handle: row.get('Insta Handle'),
             twitter_handle: row.get('Twitter Handle'),
+            linkedin_handle_social: row.get('LinkedIn (Social)'), // New field
+            other_socials: row.get('Other Socials'), // New field
             social_analysis: row.get('Social Analysis'),
 
             // Track C: Content
