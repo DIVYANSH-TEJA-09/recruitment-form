@@ -367,8 +367,12 @@ export default function Dashboard() {
                                                 {activeTab === "Social Media Team" && (
                                                     <>
                                                         <td className="px-6 py-4">
-                                                            <div className="text-xs">IG: {sub.instagram_handle}</div>
-                                                            <div className="text-xs">X: {sub.twitter_handle}</div>
+                                                            <div className="flex flex-col space-y-1">
+                                                                {sub.instagram_handle && <div className="text-xs text-gray-600">IG: {sub.instagram_handle}</div>}
+                                                                {sub.twitter_handle && <div className="text-xs text-gray-600">X: {sub.twitter_handle}</div>}
+                                                                {sub.linkedin_link && <a href={sub.linkedin_link} target="_blank" className="text-[#673ab7] hover:underline text-xs">LinkedIn</a>}
+                                                                {sub.portfolio_link_tech && <a href={sub.portfolio_link_tech} target="_blank" className="text-[#673ab7] hover:underline text-xs">Portfolio</a>}
+                                                            </div>
                                                         </td>
                                                         <td className="px-6 py-4 max-w-xs truncate" title={sub.social_analysis}>{sub.social_analysis}</td>
                                                     </>
