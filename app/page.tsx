@@ -68,7 +68,9 @@ const formSchema = z.object({
   // Track C: Content
   content_type: z.array(z.string()).optional(),
   portfolio_link: z.string().optional(),
-  content_socials: z.string().optional(), // New field
+  content_socials_ig: z.string().optional(),
+  content_socials_yt: z.string().optional(),
+  content_socials_behance: z.string().optional(),
   creative_process: z.string().optional(),
   design_philosophy: z.string().optional(),
   feedback_handling: z.string().optional(),

@@ -320,10 +320,22 @@ export const formStructure: Section[] = [
         required: true
       },
       {
-        id: "content_socials",
-        type: "textarea",
-        text: "Social Media Accounts showcasing your work (Instagram, YouTube, etc.) - Optional",
-        description: "Paste links to your creative pages if you have them.",
+        id: "content_socials_ig",
+        type: "text",
+        text: "Instagram Handle (Optional)",
+        description: "Where you post your creative work.",
+        required: false
+      },
+      {
+        id: "content_socials_yt",
+        type: "text",
+        text: "YouTube Channel (Optional)",
+        required: false
+      },
+      {
+        id: "content_socials_behance",
+        type: "text",
+        text: "Behance / Dribbble / Other (Optional)",
         required: false
       },
       {

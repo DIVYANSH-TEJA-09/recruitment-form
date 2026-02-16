@@ -86,7 +86,9 @@ export async function POST(req: Request) {
             // Track C
             "Content Type": Array.isArray(body.content_type) ? body.content_type.join(', ') : '',
             "Portfolio Link": body.portfolio_link || '',
-            "Content Socials": body.content_socials || '', // New field
+            "Content IG": body.content_socials_ig || '',
+            "Content YT": body.content_socials_yt || '',
+            "Content Other": body.content_socials_behance || '',
             "Process": body.creative_process || '',
             "Philosophy": body.design_philosophy || '',
             "Feedback": body.feedback_handling || '',
